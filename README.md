@@ -1,4 +1,4 @@
-Forked from [tsoding/ded](/tsoding/ded)
+Forked from [tsoding/ded](https://github.com/tsoding/ded)
 
 # Dramatic EDitor
 
