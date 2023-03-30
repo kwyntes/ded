@@ -1,3 +1,5 @@
+Forked from [tsoding/ded](/tsoding/ded)
+
 # Dramatic EDitor
 
 **THIS SOFTWARE IS UNFINISHED!!! Don't have any high expectations.**
