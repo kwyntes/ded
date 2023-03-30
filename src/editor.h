@@ -9,24 +9,28 @@
 
 #include <SDL2/SDL.h>
 
-typedef struct {
+typedef struct
+{
     size_t begin;
     size_t end;
 } Line;
 
-typedef struct {
+typedef struct
+{
     Line *items;
     size_t count;
     size_t capacity;
 } Lines;
 
-typedef struct {
+typedef struct
+{
     Token *items;
     size_t count;
     size_t capacity;
 } Tokens;
 
-typedef struct {
+typedef struct
+{
     Free_Glyph_Atlas *atlas;
 
     String_Builder data;
@@ -51,6 +55,7 @@ Errno editor_save(const Editor *editor);
 Errno editor_load_from_file(Editor *editor, const char *file_path);
 
 void editor_backspace(Editor *editor);
+void editor_backspace_word(Editor *e);
 void editor_delete(Editor *editor);
 size_t editor_cursor_row(const Editor *e);
 
