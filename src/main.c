@@ -159,6 +159,7 @@ int main(int argc, char **argv)
             hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE__,
             &pref, sizeof(int));
 
+        // Hide icon in titlebar since we don't have one yet
         int extendedStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
         SetWindowLong(hwnd, GWL_EXSTYLE, extendedStyle | WS_EX_DLGMODALFRAME);
     }
@@ -402,7 +403,14 @@ int main(int argc, char **argv)
 
                     case SDLK_DELETE:
                     {
-                        editor_delete(&editor);
+                        if (event.key.keysym.mod & KMOD_CTRL)
+                        {
+                            editor_delete_word(&editor);
+                        }
+                        else
+                        {
+                            editor_delete(&editor);
+                        }
                         editor.last_stroke = SDL_GetTicks();
                     }
                     break;
@@ -436,16 +444,21 @@ int main(int argc, char **argv)
 
                     case SDLK_TAB:
                     {
-                        // TODO: indent on Tab instead of just inserting 4 spaces at the cursor
-                        // That is insert the spaces at the beginning of the line. Shift+TAB should
-                        // do unindent, that is remove 4 spaces from the beginning of the line.
                         // TODO: customizable indentation style
                         // - tabs/spaces
                         // - tab width
                         // - etc.
-                        for (size_t i = 0; i < 4; ++i)
+                        if (event.key.keysym.mod & KMOD_CTRL)
                         {
-                            editor_insert_char(&editor, ' ');
+                            editor_match_spacing(&editor);
+                        }
+                        else if (event.key.keysym.mod & KMOD_SHIFT)
+                        {
+                            editor_unindent_line(&editor);
+                        }
+                        else
+                        {
+                            editor_indent_line(&editor);
                         }
                     }
                     break;

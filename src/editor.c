@@ -7,6 +7,9 @@
 #include "./editor.h"
 #include "./common.h"
 
+// for debugging only
+// #include <Windows.h>
+
 void editor_backspace(Editor *e)
 {
     if (e->searching)
@@ -38,6 +41,9 @@ void editor_backspace(Editor *e)
     }
     else
     {
+        // TODO: I have no idea how the searching mechanism works but it seems like the count has to be decremented by the
+        // TODO: number of characters removed or something, so uhh work on that I guess/
+
         size_t normalized_select_begin = e->cursor > e->select_begin ? e->select_begin : e->cursor;
         size_t normalized_select_end = e->cursor > e->select_begin ? e->cursor : e->select_begin;
 
@@ -66,6 +72,12 @@ void editor_backspace_word(Editor *e)
 
 void editor_delete(Editor *e)
 {
+    if (e->selection)
+    {
+        editor_backspace(e);
+        return;
+    }
+
     if (e->searching)
         return;
 
@@ -77,6 +89,18 @@ void editor_delete(Editor *e)
         e->data.count - e->cursor - 1);
     e->data.count -= 1;
     editor_retokenize(e);
+}
+
+void editor_delete_word(Editor *e)
+{
+    while (e->cursor < e->data.count && !isalnum(e->data.items[e->cursor]))
+    {
+        editor_delete(e);
+    }
+    while (e->cursor < e->data.count && isalnum(e->data.items[e->cursor]))
+    {
+        editor_delete(e);
+    }
 }
 
 // TODO: make sure that you always have new line at the end of the file while saving
@@ -656,4 +680,95 @@ void editor_move_paragraph_down(Editor *e)
         row += 1;
     }
     e->cursor = e->lines.items[row].begin;
+}
+
+void editor_indent_line(Editor *e)
+{
+    size_t cursor = e->cursor;
+
+    e->cursor = e->lines.items[editor_cursor_row(e)].begin;
+    for (int i = 0; i < 4; i++)
+    {
+        editor_insert_char(e, ' ');
+    }
+
+    e->cursor = cursor + 4;
+}
+
+void editor_unindent_line(Editor *e)
+{
+    size_t cursor = e->cursor;
+
+    // Go to beginning of line
+    e->cursor = e->lines.items[editor_cursor_row(e)].begin;
+    int i = 0;
+    while (i < 4 && e->data.items[e->cursor] == ' ')
+    {
+        editor_delete(e);
+        i++;
+    }
+
+    e->cursor = cursor - i;
+}
+
+// TODO: Should vary depending on language
+BOOL isidchar(char c)
+{
+    return isalnum(c) || c == '_';
+}
+
+// TODO: This whole feature could be a lot more refined
+// For instance, skipping empty lines, checking characters based on the character type at our cursor right now, ...
+void editor_match_spacing(Editor *e)
+{
+    size_t row = editor_cursor_row(e);
+
+    if (row == 0)
+        return;
+
+    // Also I still have to figure out how the searching mechanism works...
+    // (put this here because it's also in editor_move_word_right)
+    editor_stop_search(e);
+
+    size_t curlinebegin = e->lines.items[row].begin;
+    size_t reflinebegin = e->lines.items[row - 1].begin;
+    size_t reflineend = e->lines.items[row - 1].end;
+
+    BOOL using_next_line = FALSE;
+    size_t vcursor = reflinebegin + e->cursor - curlinebegin;
+    if (vcursor > reflineend)
+    {
+        // Previous line too short, try with next line instead
+
+        if (row >= e->lines.count)
+            return;
+
+        reflinebegin = e->lines.items[row + 1].begin;
+        reflineend = e->lines.items[row + 1].end;
+
+        vcursor = reflinebegin + e->cursor - curlinebegin;
+        if (vcursor > reflineend)
+            // Next line too short as well
+            return;
+
+        using_next_line = TRUE;
+    }
+
+    while (vcursor < reflineend && isidchar(e->data.items[vcursor]))
+    {
+        // When using the next line as the reference line, vcursor has to be incremented twice,
+        // because by inserting characters we also shift the whole buffer by one, meaning that vcursor
+        // is offset by one as well.
+        // Sorry I'm bad at explaining stuff...
+        if (using_next_line)
+            vcursor += 1;
+
+        vcursor += 1;
+        editor_insert_char(e, ' ');
+    }
+    while (vcursor < reflineend && e->data.items[vcursor] == ' ')
+    {
+        vcursor += 1;
+        editor_insert_char(e, ' ');
+    }
 }
