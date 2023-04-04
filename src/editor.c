@@ -726,6 +726,17 @@ void editor_move_paragraph_down(Editor *e)
     e->cursor = e->lines.items[row].begin;
 }
 
+// TODO: I have no idea how to implement these yet...
+void editor_move_line_itself_up(Editor *e)
+{
+    //
+}
+
+void editor_move_line_itself_down(Editor *e)
+{
+    //
+}
+
 void editor_indent_line(Editor *e)
 {
     size_t cursor = e->cursor;

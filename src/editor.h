@@ -75,6 +75,11 @@ void editor_move_to_line_end(Editor *e);
 void editor_move_paragraph_up(Editor *e);
 void editor_move_paragraph_down(Editor *e);
 
+// TODO: Rename all the cursor move functions to _move_cursor_
+// and then rename these to just _move_line_
+void editor_move_line_itself_up(Editor *e);
+void editor_move_line_itself_down(Editor *e);
+
 void editor_indent_line(Editor *e);
 void editor_unindent_line(Editor *e);
 void editor_match_spacing(Editor *e);

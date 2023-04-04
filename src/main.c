@@ -501,6 +501,10 @@ int main(int argc, char **argv)
                         {
                             editor_move_paragraph_up(&editor);
                         }
+                        else if (event.key.keysym.mod & KMOD_ALT)
+                        {
+                            editor_move_line_itself_up(&editor);
+                        }
                         else
                         {
                             editor_move_line_up(&editor);
@@ -515,6 +519,10 @@ int main(int argc, char **argv)
                         if (event.key.keysym.mod & KMOD_CTRL)
                         {
                             editor_move_paragraph_down(&editor);
+                        }
+                        else if (event.key.keysym.mod & KMOD_ALT)
+                        {
+                            editor_move_line_itself_down(&editor);
                         }
                         else
                         {
