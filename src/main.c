@@ -481,6 +481,19 @@ int main(int argc, char **argv)
                     }
                     break;
 
+                    case SDLK_x:
+                    {
+                        if (event.key.keysym.mod & KMOD_CTRL)
+                        {
+                            editor_clipboard_copy(&editor);
+                            if (editor.selection)
+                            {
+                                editor_backspace(&editor);
+                            }
+                        }
+                    }
+                    break;
+
                     case SDLK_UP:
                     {
                         editor_update_selection(&editor, event.key.keysym.mod & KMOD_SHIFT);

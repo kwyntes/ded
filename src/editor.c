@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include "./editor.h"
 #include "./common.h"
 
@@ -554,7 +555,7 @@ void editor_clipboard_copy(Editor *e)
             SWAP(size_t, begin, end);
 
         e->clipboard.count = 0;
-        sb_append_buf(&e->clipboard, &e->data.items[begin], end - begin + 1);
+        sb_append_buf(&e->clipboard, &e->data.items[begin], end - begin);
         sb_append_null(&e->clipboard);
 
         if (SDL_SetClipboardText(e->clipboard.items) < 0)
@@ -570,6 +571,11 @@ void editor_clipboard_paste(Editor *e)
     size_t text_len = strlen(text);
     if (text_len > 0)
     {
+        if (e->selection)
+        {
+            editor_backspace(e);
+        }
+
         editor_insert_buf(e, text, text_len);
     }
     else
@@ -712,7 +718,7 @@ void editor_unindent_line(Editor *e)
 }
 
 // TODO: Should vary depending on language
-BOOL isidchar(char c)
+bool isidchar(char c)
 {
     return isalnum(c) || c == '_';
 }
@@ -734,7 +740,7 @@ void editor_match_spacing(Editor *e)
     size_t reflinebegin = e->lines.items[row - 1].begin;
     size_t reflineend = e->lines.items[row - 1].end;
 
-    BOOL using_next_line = FALSE;
+    _Bool using_next_line = false;
     size_t vcursor = reflinebegin + e->cursor - curlinebegin;
     if (vcursor > reflineend)
     {
@@ -751,7 +757,7 @@ void editor_match_spacing(Editor *e)
             // Next line too short as well
             return;
 
-        using_next_line = TRUE;
+        using_next_line = true;
     }
 
     while (vcursor < reflineend && isidchar(e->data.items[vcursor]))
