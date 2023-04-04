@@ -80,6 +80,7 @@ void editor_unindent_line(Editor *e);
 void editor_match_spacing(Editor *e);
 
 void editor_insert_char(Editor *e, char x);
+void editor_insert_newline(Editor *e);
 void editor_insert_buf(Editor *e, char *buf, size_t buf_len);
 void editor_retokenize(Editor *e);
 void editor_render(SDL_Window *window, Free_Glyph_Atlas *atlas, Simple_Renderer *sr, Editor *editor);

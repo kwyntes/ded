@@ -33,12 +33,23 @@ void editor_backspace(Editor *e)
         if (e->cursor == 0)
             return;
 
+        // Skip indents
+        size_t row = editor_cursor_row(e);
+        size_t prevlineend = row > 0 ? e->lines.items[row - 1].end : 0;
+        size_t vcursor = e->cursor - 1;
+        while (vcursor > prevlineend && e->data.items[vcursor] == ' ')
+        {
+            vcursor -= 1;
+        }
+        size_t remove_count = vcursor == prevlineend /* There are only spaces before the cursor */ ? e->cursor - prevlineend : 1;
+
+        // Not sure how this makes the trailing characters disappear but it works so whatever
         memmove(
-            &e->data.items[e->cursor - 1],
+            &e->data.items[e->cursor - remove_count],
             &e->data.items[e->cursor],
             e->data.count - e->cursor);
-        e->cursor -= 1;
-        e->data.count -= 1;
+        e->cursor -= remove_count;
+        e->data.count -= remove_count;
     }
     else
     {
@@ -240,6 +251,33 @@ void editor_insert_char(Editor *e, char x)
     }
 
     editor_insert_buf(e, &x, 1);
+}
+
+void editor_insert_newline(Editor *e)
+{
+    // Count number of spaces
+    size_t row = editor_cursor_row(e);
+    size_t vcursor = e->lines.items[row].begin;
+    int indent_before_cursor = 0;
+    while (vcursor < e->cursor && e->data.items[vcursor] == ' ')
+    {
+        indent_before_cursor += 1;
+        vcursor += 1;
+    }
+    int indent_after_cursor = 0;
+    while (vcursor < e->lines.items[row].end && e->data.items[vcursor] == ' ')
+    {
+        indent_after_cursor += 1;
+        vcursor += 1;
+    }
+
+    while (indent_after_cursor-- > 0)
+        editor_insert_char(e, ' ');
+
+    editor_insert_char(e, '\n');
+
+    while (indent_before_cursor-- > 0)
+        editor_insert_char(e, ' ');
 }
 
 void editor_insert_buf(Editor *e, char *buf, size_t buf_len)

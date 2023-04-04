@@ -395,7 +395,7 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            editor_insert_char(&editor, '\n');
+                            editor_insert_newline(&editor);
                             editor.last_stroke = SDL_GetTicks();
                         }
                     }
