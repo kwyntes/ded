@@ -823,6 +823,9 @@ void editor_match_spacing(Editor *e)
     }
     while (vcursor < reflineend && e->data.items[vcursor] == ' ')
     {
+        if (using_next_line)
+            vcursor += 1;
+
         vcursor += 1;
         editor_insert_char(e, ' ');
     }
