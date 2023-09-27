@@ -726,15 +726,64 @@ void editor_move_paragraph_down(Editor *e)
     e->cursor = e->lines.items[row].begin;
 }
 
-// TODO: I have no idea how to implement these yet...
+// ~~TODO: I have no idea how to implement these yet...~~
+// It seems pretty simple? Or I must be missing something really important :>imscarednow<:
 void editor_move_line_itself_up(Editor *e)
 {
-    //
+    size_t row = editor_cursor_row(e);
+
+    // Can't really move up when we're already at the top
+    if (row == 0)
+        return;
+
+    size_t curlinebegin = e->lines.items[row].begin;
+    size_t curlineend = e->lines.items[row].end;
+    size_t prevlinebegin = e->lines.items[row - 1].begin;
+    size_t prevlineend = e->lines.items[row - 1].end;
+
+    // Store the previous line
+    char *tmp = malloc(curlinebegin - prevlinebegin);
+    memmove(tmp, &e->data.items[prevlinebegin], curlinebegin - prevlinebegin /* Move the newline character as well */);
+    // Move the current line to the previous line
+    memmove(&e->data.items[prevlinebegin], &e->data.items[curlinebegin], curlineend - curlinebegin);
+    // Move the newline character to the right place
+    memmove(&e->data.items[prevlinebegin + curlineend - curlinebegin], &tmp[prevlineend - prevlinebegin], 1);
+    // Move the rest of the stored line
+    memmove(&e->data.items[prevlinebegin + curlineend - prevlineend], tmp, prevlineend - prevlinebegin);
+    free(tmp);
+
+    e->cursor -= curlinebegin - prevlinebegin;
+
+    editor_retokenize(e);
 }
 
 void editor_move_line_itself_down(Editor *e)
 {
-    //
+    size_t row = editor_cursor_row(e);
+
+    // Can't really move down when we're already at the bottom
+    if (row == e->lines.count - 1)
+        return;
+
+    size_t nextlinebegin = e->lines.items[row + 1].begin;
+    size_t nextlineend = e->lines.items[row + 1].end;
+    size_t curlinebegin = e->lines.items[row].begin;
+    size_t curlineend = e->lines.items[row].end;
+
+    // Store the current line
+    char *tmp = malloc(nextlinebegin - curlinebegin);
+    memmove(tmp, &e->data.items[curlinebegin], nextlinebegin - curlinebegin /* Move the newline character as well */);
+    // Move the current line to the current line
+    memmove(&e->data.items[curlinebegin], &e->data.items[nextlinebegin], nextlineend - nextlinebegin);
+    // Move the newline character to the right place
+    memmove(&e->data.items[curlinebegin + nextlineend - nextlinebegin], &tmp[curlineend - curlinebegin], 1);
+    // Move the rest of the stored line
+    memmove(&e->data.items[curlinebegin + nextlineend - curlineend], tmp, curlineend - curlinebegin);
+    free(tmp);
+
+    e->cursor += nextlineend - curlineend;
+
+    editor_retokenize(e);
 }
 
 void editor_indent_line(Editor *e)
