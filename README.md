@@ -6,12 +6,14 @@ Forked from [tsoding/ded](https://github.com/tsoding/ded)
 
 <br/>
 
-### IMPORTANT NOTE
+### ~~IMPORTANT NOTE~~
 
-This _will_ crash on launch (that is, on Windows at least). Sometimes a little. Sometimes a lot. But eventually
+~~This _will_ crash on launch (that is, on Windows at least). Sometimes a little. Sometimes a lot. But eventually
 it will open. The issue is apparently caused by the shaders randomly failing to compile, so it's probably caused
 by _some_ kind of memory issue, but I have no idea what. I didn't write that part of the software anyway
-and the guy who did uses Linux, so there's a chance it's a platform-dependent issue as well.
+and the guy who did uses Linux, so there's a chance it's a platform-dependent issue as well.~~
+
+UPDATE ONE DAY LATER: Should be fixed now!
 
 <br/>
 

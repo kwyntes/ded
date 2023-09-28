@@ -32,6 +32,8 @@ static const char *shader_type_as_cstr(GLuint shader)
 
 static bool compile_shader_source(const GLchar *source, GLenum shader_type, GLuint *shader)
 {
+    // fprintf(stderr, "\n=== SHADER SOURCE PRE! ===\n%s\n===/SHADER SOURCE ===\n\n", source);
+
     *shader = glCreateShader(shader_type);
     glShaderSource(*shader, 1, &source, NULL);
     glCompileShader(*shader);
@@ -46,32 +48,135 @@ static bool compile_shader_source(const GLchar *source, GLenum shader_type, GLui
         glGetShaderInfoLog(*shader, sizeof(message), &message_size, message);
         fprintf(stderr, "ERROR: could not compile %s\n", shader_type_as_cstr(shader_type));
         fprintf(stderr, "%.*s\n", message_size, message);
+
+        fprintf(stderr, "\n=== SHADER SOURCE ===\n%s\n===/SHADER SOURCE ===\n\n", source);
+
         return false;
     }
 
     return true;
 }
 
+// TODO: !!! REFACTOR THIS !!!
+/* ---------------- BEGIN STACKOVERFLOW COPY/PASTE (reading files is hard ok?) ---------------- */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+
+/* Size of each input chunk to be
+   read and allocate for. */
+#ifndef READALL_CHUNK
+#define READALL_CHUNK 262144
+#endif
+
+#define READALL_OK 0       /* Success */
+#define READALL_INVALID -1 /* Invalid parameters */
+#define READALL_ERROR -2   /* Stream error */
+#define READALL_TOOMUCH -3 /* Too much input */
+#define READALL_NOMEM -4   /* Out of memory */
+
+/* This function returns one of the READALL_ constants above.
+   If the return value is zero == READALL_OK, then:
+     (*dataptr) points to a dynamically allocated buffer, with
+     (*sizeptr) chars read from the file.
+     The buffer is allocated for one extra char, which is NUL,
+     and automatically appended after the data.
+   Initial values of (*dataptr) and (*sizeptr) are ignored.
+*/
+int readall(FILE *in, char **dataptr, size_t *sizeptr)
+{
+    char *data = NULL, *temp;
+    size_t size = 0;
+    size_t used = 0;
+    size_t n;
+
+    /* None of the parameters can be NULL. */
+    if (in == NULL || dataptr == NULL || sizeptr == NULL)
+        return READALL_INVALID;
+
+    /* A read error already occurred? */
+    if (ferror(in))
+        return READALL_ERROR;
+
+    while (1)
+    {
+
+        if (used + READALL_CHUNK + 1 > size)
+        {
+            size = used + READALL_CHUNK + 1;
+
+            /* Overflow check. Some ANSI C compilers
+               may optimize this away, though. */
+            if (size <= used)
+            {
+                free(data);
+                return READALL_TOOMUCH;
+            }
+
+            temp = realloc(data, size);
+            if (temp == NULL)
+            {
+                free(data);
+                return READALL_NOMEM;
+            }
+            data = temp;
+        }
+
+        n = fread(data + used, 1, READALL_CHUNK, in);
+        if (n == 0)
+            break;
+
+        used += n;
+    }
+
+    if (ferror(in))
+    {
+        free(data);
+        return READALL_ERROR;
+    }
+
+    temp = realloc(data, used + 1);
+    if (temp == NULL)
+    {
+        free(data);
+        return READALL_NOMEM;
+    }
+    data = temp;
+    data[used] = '\0';
+
+    *dataptr = data;
+    *sizeptr = used;
+
+    return READALL_OK;
+}
+
+/* ---------------- END STACKOVERFLOW COPY/PASTE ---------------- */
+
 static bool compile_shader_file(const char *file_path, GLenum shader_type, GLuint *shader)
 {
     bool result = true;
 
-    String_Builder source = {0};
-    Errno err = read_entire_file(file_path, &source);
+    // TODO: Refactor!
+    char *src;
+    size_t sz;
+    FILE *fp = fopen(file_path, "r");
+    int err = readall(fp, &src, &sz);
+    fclose(fp);
+
     if (err != 0)
     {
         fprintf(stderr, "ERROR: failed to load `%s` shader file: %s\n", file_path, strerror(errno));
         return_defer(false);
     }
-    sb_append_null(&source);
 
-    if (!compile_shader_source(source.items, shader_type, shader))
+    if (!compile_shader_source(src, shader_type, shader))
     {
         fprintf(stderr, "ERROR: failed to compile `%s` shader file\n", file_path);
         return_defer(false);
     }
 defer:
-    free(source.items);
+    free(src);
     return result;
 }
 
